@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_keycloak
+    restart: always
+    environment:
+      POSTGRES_DB: db_keycloak
+      POSTGRES_USER: user_keycloak
+      POSTGRES_PASSWORD: psw1keycloaK@
+    volumes:
+      - ./sourcefiles/postgresql:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  keycloak:
+    image: jboss/keycloak:latest
+    restart: always
+    volumes:
+      - "./certs/server.crt.pem:/etc/x509/https/tls.crt"   # Map certificate to container
+      - "./certs/server.key.pem:/etc/x509/https/tls.key"   # Map private key to container
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: db_keycloak
+      DB_USER: user_keycloak
+      DB_PASSWORD: psw1keycloaK@
+      KC_HOSTNAME: fqdn # Set the hostname here
+      KC_HTTPS_CERTIFICATE_FILE: /etc/x509/https/tls.crt
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /etc/x509/https/tls.key
+    ports:
+      - 8080:8080   # Listen to HTTP on host port 80 and forward to keycloak on 8080
+      - 443:8443  # Listen to HTTPS on host port 443 and forward to keycloak on 8443
+    depends_on:
+      - postgres
